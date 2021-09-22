@@ -1,78 +1,91 @@
+const { MongoClient, ObjectId } = require("mongodb");
 const express = require("express");
 const app = express();
 
-// Sinalizamos para o Express que todo body da requisição
-// estará estruturado em JSON
-app.use(express.json());
+(async () => {
+  const url =
+    "mongodb+srv://admin:UE8yn07GOpY2SKQn@cluster0.7fu0x.mongodb.net/ocean_db?retryWrites=true&w=majority";
+  const dbName = "maria_ocean_bancodedados_22_09_2020";
 
-app.get("/", function (req, res) {
+  const client = await MongoClient.connect(url);
+
+  const db = client.db(dbName);
+
+  const collection = db.collection("personagens");
+
+  // Sinalizamos para o Express que todo body da requisição
+  // estará estruturado em JSON
+  app.use(express.json());
+
+  app.get("/", function (req, res) {
     res.send("Hello World");
-});
+  });
 
-// CRUD -> Create, Read (All & Single/byId), Update, Delete
+  // CRUD -> Create, Read (All & Single/byId), Update, Delete
 
-// "CRUD em memória"
+  // "CRUD em memória"
 
-// Lista de textos (strings)
-const lista = [
+  // Lista de textos (strings)
+  const lista = [
     {
-        id: 1,
-        nome: "Rick Sanchez",
+      id: 1,
+      nome: "Rick Sanchez",
     },
     {
-        id: 2,
-        nome: "Morty Smith",
+      id: 2,
+      nome: "Morty Smith",
     },
-];
+  ];
 
-// [GET] /personagens
-// Read All
-app.get("/personagens", function (req, res) {
-    res.send(lista);
-});
+  // [GET] /personagens
+  // Read All
+  app.get("/personagens", async function (req, res) {
+    const listaPersonagens = await collection.find().toArray();
+    res.send(listaPersonagens);
+  });
 
-function findById(id) {
-    return lista.find(elemento => elemento.id === id);
-}
+  function findById(id) {
+    return collection.findOne({ _id: new ObjectId(id) });
+  }
 
-// [GET] /personagens/:id
-// Read By Id
-app.get("/personagens/:id", function (req, res) {
-    const id = +req.params.id;
+  // [GET] /personagens/:id
+  // Read By Id
+  app.get("/personagens/:id", async function (req, res) {
+    const id = req.params.id;
 
-    const item = findById(id);
+    const item = await findById(id);
 
     if (!item) {
-        res.status(404).send("Personagem não encontrado.");
+      res.status(404).send("Personagem não encontrado.");
 
-        return;
+      return;
     }
 
     res.send(item);
-});
+  });
 
-// [POST] /personagens
-// Create
-app.post("/personagens", function (req, res) {
+  // [POST] /personagens
+  // Create
+  app.post("/personagens", function (req, res) {
     // Obtém o corpo da requisição e coloca na variável item
     const item = req.body;
 
     if (!item) {
-        res.status(400).send(
-            "Chave 'nome' não foi encontrada no corpo da requisição."
-        );
+      res
+        .status(400)
+        .send("Chave 'nome' não foi encontrada no corpo da requisição.");
 
-        return;
+      return;
     }
 
     item.id = lista.push(item);
 
     res.status(201).send(item);
-});
+  });
 
-// [PUT] /personagens/:id
-// Update
-app.put("/personagens/:id", function (req, res) {
+  // [PUT] /personagens/:id
+  // Update
+  app.put("/personagens/:id", function (req, res) {
     /*
     Objetivo: Atualizar uma personagem
     Passos:
@@ -87,19 +100,19 @@ app.put("/personagens/:id", function (req, res) {
     const itemEncontrado = findById(id);
 
     if (!itemEncontrado) {
-        res.status(404).send("Personagem não encontrado.");
+      res.status(404).send("Personagem não encontrado.");
 
-        return;
+      return;
     }
 
     const novoItem = req.body;
 
     if (!novoItem || !novoItem.nome) {
-        res.status(400).send(
-            "Chave 'nome' não foi encontrada no corpo da requisição."
-        );
+      res
+        .status(400)
+        .send("Chave 'nome' não foi encontrada no corpo da requisição.");
 
-        return;
+      return;
     }
 
     const index = lista.indexOf(itemEncontrado);
@@ -109,19 +122,19 @@ app.put("/personagens/:id", function (req, res) {
     lista[index] = novoItem;
 
     res.send("Personagem atualizada com sucesso!");
-});
+  });
 
-// [DELETE] /personagens/:id
-// Delete
-app.delete("/personagens/:id", function (req, res) {
+  // [DELETE] /personagens/:id
+  // Delete
+  app.delete("/personagens/:id", function (req, res) {
     const id = +req.params.id;
 
     const itemEncontrado = findById(id);
 
     if (!itemEncontrado) {
-        res.status(404).send("Personagem não encontrado.");
+      res.status(404).send("Personagem não encontrado.");
 
-        return;
+      return;
     }
 
     const index = lista.indexOf(itemEncontrado);
@@ -129,6 +142,7 @@ app.delete("/personagens/:id", function (req, res) {
     lista.splice(index, 1);
 
     res.send("Personagem removida com sucesso!");
-});
+  });
 
-app.listen(3000);
+  app.listen(3000);
+})();
