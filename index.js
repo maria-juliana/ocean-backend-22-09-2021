@@ -4,7 +4,7 @@ const app = express();
 
 (async () => {
   const url =
-    "mongodb+srv://admin:UE8yn07GOpY2SKQn@cluster0.7fu0x.mongodb.net/ocean_db?retryWrites=true&w=majority";
+    "mongodb+srv://admin:carrobranco@cluster0.tssrs.mongodb.net/";
   const dbName = "maria_ocean_bancodedados_22_09_2020";
 
   const client = await MongoClient.connect(url);
@@ -138,5 +138,5 @@ const app = express();
     res.send("Personagem removida com sucesso!");
   });
 
-  app.listen(3000);
+  app.listen(process.env.PORT || 3000);
 })();
